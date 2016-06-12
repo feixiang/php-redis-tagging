@@ -129,13 +129,13 @@ class RedisTagging
         $result = $redisTagging->get('tag1');
 
         // want page limit ?
-        $result = $redisTagging->limit(10)->offset(0)->get('tag1');
+        $result = $redisTagging->offset(0)->limit(10)->get('tag1');
 
         // get interset of tags
-        $result = $redisTagging->limit(10)->offset(10)->type('inter')->get(['tag1', 'tag2']);
+        $result = $redisTagging->offset(10)->limit(10)->type('inter')->get(['tag1', 'tag2']);
 
         // order ?
-        $result = $redisTagging->limit(10)->offset(10)->type('inter')->order('desc')->get(['tag1', 'tag2']);
+        $result = $redisTagging->offset(10)->limit(10)->type('inter')->order('desc')->get(['tag1', 'tag2']);
 
         // get hottest tags
         $result = $redisTagging->topTags(3);
@@ -254,7 +254,7 @@ class RedisTagging
      */
     public function remove($tag)
     {
-        $key = $this->getKey(":TAG:{$tag}");
+        $key = $this->getKey("TAG:{$tag}");
 
         return $this->redis->del($key);
     }
