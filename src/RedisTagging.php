@@ -125,6 +125,37 @@ class RedisTagging
         // optional,default to "default"
         $redisTagging->bucket("default");
 
+        // set a tag
+        $tags = [
+            'tag1' => [
+                [
+                    'member' => "a1",
+                    'score' => 1
+                ],
+                [
+                    'member' => "a2",
+                    'score' => 2
+                ]
+            ],
+            'tag2' => [
+                [
+                    'member' => "a1",
+                    'score' => 2
+                ],
+                [
+                    'member' => "b2",
+                    'score' => 4
+                ],
+                [
+                    'member' => "b3",
+                    'score' => 3
+                ]
+            ]
+        ];
+        foreach ($tags as $tag => $item) {
+            $redisTagging->set($tag, $item);
+        }
+
         // get a tag
         $result = $redisTagging->get('tag1');
 
@@ -172,11 +203,14 @@ class RedisTagging
         if (is_string($tags)) {
             // if string , get it directly
             $key = $this->getKey("TAG:{$tags}");
-            $tags = [$tags];
-        } else {
-            // add prefix to each tag
-            foreach ($tags as $i => $tag) {
-                $tags[$i] = $this->getKey("TAG:{$tag}");
+        } else if (is_array($tags)) {
+            if (count($tags) == 1) {
+                $key = $this->getKey("TAG:{$tags[0]}");
+            } else {
+                // add prefix to each tag
+                foreach ($tags as $i => $tag) {
+                    $tags[$i] = $this->getKey("TAG:{$tag}");
+                }
             }
         }
 
@@ -210,11 +244,10 @@ class RedisTagging
 
 
     /**
-     * set tags
-     * @param array $tags
-     * @param array $values
-     * @param string $bucket
-     * @return int Return length of set
+     * set tag items for a tag
+     * @param $tag
+     * @param $item
+     * @return mixed
      */
     public function set($tag, $item)
     {

@@ -25,6 +25,37 @@ public function demo()
     // optional,default to "default"
     $redisTagging->bucket("default");
 
+    // set a tag
+    $tags = [
+        'tag1' => [
+            [
+                'member' => "a1",
+                'score' => 1
+            ],
+            [
+                'member' => "a2",
+                'score' => 2
+            ]
+        ],
+        'tag2' => [
+            [
+                'member' => "a1",
+                'score' => 2
+            ],
+            [
+                'member' => "b2",
+                'score' => 4
+            ],
+            [
+                'member' => "b3",
+                'score' => 3
+            ]
+        ]
+    ];
+    foreach ($tags as $tag => $item) {
+        $redisTagging->set($tag, $item);
+    }
+
     // get a tag
     $result = $redisTagging->get('tag1');
 
