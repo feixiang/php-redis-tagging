@@ -218,7 +218,7 @@ class RedisTagging
         $multiTags = count($tags) > 1;
 
         if ($multiTags) {
-            $tmpKey = $key . '_' . time() . random_int(1000, 9999);
+            $tmpKey = $key . '_' . time() . rand(1000, 9999);
             $key = $tmpKey;
 
             $type = ucwords($this->type);
