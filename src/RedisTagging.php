@@ -128,28 +128,13 @@ class RedisTagging
         // set a tag
         $tags = [
             'tag1' => [
-                [
-                    'member' => "a1",
-                    'score' => 1
-                ],
-                [
-                    'member' => "a2",
-                    'score' => 2
-                ]
+                ['member' => "a1", 'score' => 2],
+                ['member' => "b2", 'score' => 4],
             ],
             'tag2' => [
-                [
-                    'member' => "a1",
-                    'score' => 2
-                ],
-                [
-                    'member' => "b2",
-                    'score' => 4
-                ],
-                [
-                    'member' => "b3",
-                    'score' => 3
-                ]
+                ['member' => "a1", 'score' => 2],
+                ['member' => "b2", 'score' => 4],
+                ['member' => "b3", 'score' => 3]
             ]
         ];
         foreach ($tags as $tag => $item) {
@@ -158,18 +143,16 @@ class RedisTagging
 
         // get a tag
         $result = $redisTagging->get('tag1');
-
         // want page limit ?
         $result = $redisTagging->offset(0)->limit(10)->get('tag1');
-
-        // get interset of tags
-        $result = $redisTagging->offset(10)->limit(10)->type('inter')->get(['tag1', 'tag2']);
-
+        // get interset of tags , limit 0 means all
+        $result = $redisTagging->offset(10)->limit(0)->type('inter')->get(['tag1', 'tag2']);
         // order ?
         $result = $redisTagging->offset(10)->limit(10)->type('inter')->order('desc')->get(['tag1', 'tag2']);
-
         // get hottest tags
         $result = $redisTagging->topTags(3);
+        //remove all tags
+        //$result = $redisTagging->removeAll();
 
     }
 
@@ -292,6 +275,44 @@ class RedisTagging
         return $this->redis->del($key);
     }
 
+
+    /**
+     * check if tag exists
+     * @param $tag
+     * @return bool
+     */
+    public function exists($tag)
+    {
+        $key = $this->getKey("TAG:{$tag}");
+
+        return $this->redis->zRank($key);
+    }
+
+    /**
+     * remove all tags of a bullet
+     * @param string $bucket
+     * @return bool
+     */
+    public function removeAll()
+    {
+        $tags = $this->limit(0)->withscores(false)->getTags();
+        if (!empty($tags)) {
+            $redis = $this->redis->multi();
+            // remove all tag sets
+            foreach ($tags as $tag) {
+                $key = $this->getKey("TAG:{$tag}");
+                $redis->del($key);
+            }
+
+            // remove tags record
+            $key = $this->getKey(self::TAGS);
+            $redis->del($key);
+
+            $redis->exec();
+        }
+        return true;
+    }
+
     /**
      * @todo remove or edit a item and update relative tags
      * Remove a tag Item
@@ -372,9 +393,10 @@ class RedisTagging
 
     public function limit($n)
     {
-        $this->limit = $this->offset + $n - 1;
-        if ($this->limit < 0) {
-            $this->limit = 0;
+        if( $n === 0 ){
+            $this->limit = -1 ;
+        }else{
+            $this->limit = $this->offset + $n - 1;
         }
 
         return $this;
@@ -417,6 +439,13 @@ class RedisTagging
     public function score($n)
     {
         $this->score = $n;
+
+        return $this;
+    }
+
+    public function withscores($bool)
+    {
+        $this->withscores = $bool;
 
         return $this;
     }
